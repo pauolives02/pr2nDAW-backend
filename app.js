@@ -1,4 +1,5 @@
 const express = require('express')
+const path = require('path')
 const userRoutes = require('./routes/user')
 
 const notFound = require('./middlewares/notFound')
@@ -17,9 +18,12 @@ app.use((req, res, next) => {
 // MIDDLEWARES
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
+app.use('/public', express.static(path.join(__dirname, 'assets')))
 
 // ROUTES
 app.use('/api/user', userRoutes)
+
+// app.use('/public', express.static(path.join(__dirname, 'assets')))
 app.use(notFound)
 
 module.exports = app

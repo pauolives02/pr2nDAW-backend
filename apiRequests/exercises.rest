@@ -1,0 +1,22 @@
+GET http://localhost:3000/api/exercise/all
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBhdUBnbWFpbC5jb20iLCJ1c2VySWQiOiI2NDJmY2NhZmQ1ODMyMWM2ZGE3OTEzYzciLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNjgwOTY5MjUxLCJleHAiOjE2ODA5NzI4NTF9.SYi1XjDm1AOKzAFditlqOrD4iwBHCnYBnRqw8yL7C70
+
+###
+GET http://localhost:3000/api/exercise/public
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBhdUBnbWFpbC5jb20iLCJ1c2VySWQiOiI2NDJmY2NhZmQ1ODMyMWM2ZGE3OTEzYzciLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNjgwOTY5MjUxLCJleHAiOjE2ODA5NzI4NTF9.SYi1XjDm1AOKzAFditlqOrD4iwBHCnYBnRqw8yL7C70
+
+###
+GET http://localhost:3000/api/exercise/private
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBhdUBnbWFpbC5jb20iLCJ1c2VySWQiOiI2NDJmY2NhZmQ1ODMyMWM2ZGE3OTEzYzciLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNjgwOTY5MjUxLCJleHAiOjE2ODA5NzI4NTF9.SYi1XjDm1AOKzAFditlqOrD4iwBHCnYBnRqw8yL7C70
+
+###
+POST http://localhost:3000/api/exercise/add
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBhdUBnbWFpbC5jb20iLCJ1c2VySWQiOiI2NDJmY2NhZmQ1ODMyMWM2ZGE3OTEzYzciLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNjgwOTY5MjUxLCJleHAiOjE2ODA5NzI4NTF9.SYi1XjDm1AOKzAFditlqOrD4iwBHCnYBnRqw8yL7C70
+Content-Type: application/json
+
+{
+  "name": "Abdominals",
+  "description": "asgfhdsjgfkdhgfdjdsj",
+  "image": "asgdsag.png",
+  "finished_xp": 5
+}

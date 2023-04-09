@@ -28,7 +28,6 @@ const controller = {
         // Crear un nou token
         const token = jwt.sign(
           {
-            email: fetchedUser.email,
             userId: fetchedUser._id,
             isAdmin: fetchedUser.isAdmin
           },
@@ -86,6 +85,14 @@ const controller = {
 
       return res.status(200).json(avatarList)
     })
+  },
+
+  getAuthUser: function (req, res) {
+    console.log(req.userId)
+    User.findOne({ _id: req.userId })
+      .then(user => {
+        return res.status(200).json(user)
+      })
   }
 }
 

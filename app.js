@@ -1,11 +1,12 @@
 const express = require('express')
 const path = require('path')
 const cors = require('cors')
+const fileUpload = require('express-fileupload')
 
 const userRoutes = require('./routes/userRoutes')
 const exerciseRoutes = require('./routes/exerciseRoutes')
 
-const checkToken = require('./middlewares/checkToken')
+// const checkToken = require('./middlewares/checkToken')
 const handleErrors = require('./middlewares/handleErrors')
 const notFound = require('./middlewares/notFound')
 
@@ -13,6 +14,7 @@ const app = express()
 
 // CORS
 app.use(cors())
+app.use(fileUpload())
 // app.use((req, res, next) => {
 //   res.header('Access-Control-Allow-Origin', '*')
 //   res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method')
@@ -28,7 +30,7 @@ app.use('/public', express.static(path.join(__dirname, 'assets')))
 
 // ROUTES
 app.use('/api/user', userRoutes)
-app.use('/api/exercise', checkToken, exerciseRoutes)
+app.use('/api/exercise', exerciseRoutes)
 
 // app.use('/public', express.static(path.join(__dirname, 'assets')))
 app.use(notFound)

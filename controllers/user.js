@@ -88,7 +88,6 @@ const controller = {
   },
 
   getAuthUser: function (req, res) {
-    console.log(req.userId)
     User.findOne({ _id: req.userId })
       .then(user => {
         return res.status(200).json(user)

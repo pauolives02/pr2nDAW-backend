@@ -7,6 +7,7 @@ const port = process.env.PORT
 
 // Connexió MongoDB
 mongoose.Promise = global.Promise
+mongoose.set('strictQuery', true)
 mongoose.connect(connectionString)
   .then(() => {
     console.log('MongoDB Connected')

@@ -13,7 +13,7 @@ const controller = {
       .then(user => {
         if (!user) {
           return res.status(401).json({
-            message: 'Auth failed'
+            msg: 'Auth failed'
           })
         }
         fetchedUser = user
@@ -22,7 +22,7 @@ const controller = {
       .then(result => {
         if (!result) {
           return res.status(401).json({
-            message: 'Auth failed'
+            msg: 'Auth failed'
           })
         }
         // Crear un nou token
@@ -42,7 +42,7 @@ const controller = {
       .catch(err => {
         console.error(err)
         return res.status(401).json({
-          message: 'Auth failed'
+          msg: 'Auth failed'
         })
       })
   },
@@ -52,17 +52,18 @@ const controller = {
       const user = new User({
         email: req.body.email,
         password: hash,
+        username: req.body.username,
         isAdmin: false
       })
       user.save()
         .then(result => {
           res.status(201).json({
-            message: 'User created'
+            msg: 'User created'
           })
         })
         .catch(err => {
           res.status(500).json({
-            message: err
+            msg: err
           })
         })
     })

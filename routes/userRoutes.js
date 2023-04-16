@@ -1,14 +1,14 @@
 const express = require('express')
-const userRoutes = require('../controllers/user')
+const userController = require('../controllers/userController')
 
 const checkToken = require('../middlewares/checkToken')
 
 const router = express.Router()
 
 // ROUTES
-router.post('/login', userRoutes.login)
-router.post('/register', userRoutes.register)
-router.get('/user-data', checkToken, userRoutes.getAuthUser)
-router.get('/avatars', userRoutes.avatars)
+router.post('/login', userController.login)
+router.post('/register', userController.register)
+router.get('/user-data', checkToken, userController.getAuthUser)
+router.get('/avatars', userController.avatars)
 
 module.exports = router

@@ -1,15 +1,18 @@
 const express = require('express')
-const exerciseRoutes = require('../controllers/exercise')
+const exerciseController = require('../controllers/exerciseController')
 const checkToken = require('../middlewares/checkToken')
 
 const router = express.Router()
 
 // ROUTES
-router.get('/all', checkToken, exerciseRoutes.all)
-router.get('/public', checkToken, exerciseRoutes.public)
-router.get('/private', checkToken, exerciseRoutes.private)
-router.get('/:id', checkToken, exerciseRoutes.getById)
-router.post('/add', checkToken, exerciseRoutes.add)
-router.get('/get-image/:image', exerciseRoutes.getImage)
+router.get('/all', checkToken, exerciseController.all)
+router.get('/public', checkToken, exerciseController.public)
+router.get('/private', checkToken, exerciseController.private)
+router.get('/subscriptions', checkToken, exerciseController.subscriptions)
+router.get('/:id', checkToken, exerciseController.getById)
+router.post('/add', checkToken, exerciseController.add)
+router.get('/get-image/:image', exerciseController.getImage)
+router.post('/subscription/add', checkToken, exerciseController.addSubscription)
+router.post('/subscription/remove', checkToken, exerciseController.removeSubscription)
 
 module.exports = router

@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 const User = require('../models/user')
+const UserSubscription = require('../models/userSubscription')
 const avatarsDirectory = './assets/img/avatars'
 
 const controller = {
@@ -57,6 +58,19 @@ const controller = {
       })
       user.save()
         .then(result => {
+          console.log(result)
+          const setSubscription = new UserSubscription({
+            user_id: result._id,
+            type: 'Set',
+            subscriptions: []
+          })
+          const exerciseSubscription = new UserSubscription({
+            user_id: result._id,
+            type: 'Exercise',
+            subscriptions: []
+          })
+          setSubscription.save()
+          exerciseSubscription.save()
           res.status(201).json({
             msg: 'User created'
           })

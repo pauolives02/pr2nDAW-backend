@@ -4,18 +4,40 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 const User = require('../models/user')
-const UserSubscription = require('../models/userSubscription')
+// const UserSubscription = require('../models/userSubscription')
 const avatarsDirectory = './assets/img/avatars'
 
 const controller = {
   login: function (req, res) {
+    // const { username, password } = req.body
+    // const user = await User.findOne({ email: username })
+
+    // const validPassword = await bcrypt.compare(password, user.password)
+
+    // if (!user || !validPassword) {
+    //   return res.status(401).json({
+    //     msg: 'Auth failed'
+    //   })
+    // }
+
+    // const token = jwt.sign(
+    //   {
+    //     userId: user._id,
+    //     isAdmin: user.isAdmin
+    //   },
+    //   process.env.SECRET,
+    //   { expiresIn: '1h' }
+    // )
+
+    // return res.status(200).json({
+    //   token,
+    //   expiresIn: 3600
+    // })
     let fetchedUser
     User.findOne({ email: req.body.username })
       .then(user => {
         if (!user) {
-          return res.status(401).json({
-            msg: 'Auth failed'
-          })
+          return false
         }
         fetchedUser = user
         return bcrypt.compare(req.body.password, user.password)
@@ -59,18 +81,18 @@ const controller = {
       user.save()
         .then(result => {
           console.log(result)
-          const setSubscription = new UserSubscription({
-            user_id: result._id,
-            type: 'Set',
-            subscriptions: []
-          })
-          const exerciseSubscription = new UserSubscription({
-            user_id: result._id,
-            type: 'Exercise',
-            subscriptions: []
-          })
-          setSubscription.save()
-          exerciseSubscription.save()
+          // const setSubscription = new UserSubscription({
+          //   user_id: result._id,
+          //   type: 'Set',
+          //   subscriptions: []
+          // })
+          // const exerciseSubscription = new UserSubscription({
+          //   user_id: result._id,
+          //   type: 'Exercise',
+          //   subscriptions: []
+          // })
+          // setSubscription.save()
+          // exerciseSubscription.save()
           res.status(201).json({
             msg: 'User created'
           })

@@ -28,7 +28,13 @@ const controller = {
             exercises = JSON.parse(JSON.stringify(exercises))
             const subscriptions = JSON.parse(JSON.stringify(result.get('subscriptions')))
             exercises.forEach((exercise, i) => {
-              exercises[i] = { ...exercises[i], isSubscribed: subscriptions.includes(exercise.id) }
+              exercise.isSubscribed = false
+              subscriptions.forEach(sub => {
+                if (exercise.id === sub.subscription) {
+                  exercise.isSubscribed = true
+                }
+              })
+              // exercises[i] = { ...exercises[i], isSubscribed: subscriptions.includes(exercise.id) }
             })
 
             return res.status(200).json(exercises)
@@ -63,8 +69,15 @@ const controller = {
             }
             exercises = JSON.parse(JSON.stringify(exercises))
             const subscriptions = JSON.parse(JSON.stringify(result.get('subscriptions')))
+            // console.log(subscriptions)
             exercises.forEach((exercise, i) => {
-              exercises[i] = { ...exercises[i], isSubscribed: subscriptions.includes(exercise.id) }
+              exercise.isSubscribed = false
+              subscriptions.forEach(sub => {
+                if (exercise.id === sub.subscription) {
+                  exercise.isSubscribed = true
+                }
+              })
+              // exercises[i] = { ...exercises[i], isSubscribed: subscriptions.includes(exercise.id) }
             })
 
             return res.status(200).json(exercises)
@@ -77,14 +90,15 @@ const controller = {
 
   subscriptions: (req, res, next) => {
     const type = 'Exercise'
-    UserSubscription.findOne({ user_id: req.userId, type, subscriptions: { $ne: [] } }).populate('subscriptions')
+    UserSubscription.findOne({ user_id: req.userId, type, subscriptions: { $ne: [] } }).populate('subscriptions.subscription')
       .then(result => {
         if (!result) {
           return res.status(200).json([])
         }
         const exercises = JSON.parse(JSON.stringify(result.get('subscriptions')))
         exercises.forEach((exercise, i) => {
-          exercises[i] = { ...exercises[i], isSubscribed: true }
+          exercise.subscription.isSubscribed = true
+          // exercises[i] = { ...exercises[i], isSubscribed: true }
         })
         return res.status(200).json(exercises)
       })
@@ -95,9 +109,12 @@ const controller = {
 
   addSubscription: (req, res, next) => {
     const type = 'Exercise'
-    const { id } = req.body
-    console.log(id)
-    UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $addToSet: { subscriptions: id } }, { new: true })
+    const { id, repetitions } = req.body
+    const subscriptionData = {
+      subscription: id,
+      repetitions
+    }
+    UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $addToSet: { subscriptions: subscriptionData } }, { new: true, upsert: true })
       .then(result => {
         return res.status(200).json(result)
       })
@@ -109,7 +126,7 @@ const controller = {
   removeSubscription: (req, res, next) => {
     const type = 'Exercise'
     const { id } = req.body
-    UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $pull: { subscriptions: id } }, { new: true })
+    UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $pull: { subscriptions: { subscription: id } } }, { new: true })
       .then(result => {
         return res.status(200).json(result)
       })

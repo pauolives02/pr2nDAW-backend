@@ -2,7 +2,12 @@ const mongoose = require('mongoose')
 
 const userSubscriptionSchema = new mongoose.Schema({
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  subscriptions: [{ type: mongoose.Schema.Types.ObjectId, refPath: 'type' }],
+  subscriptions: [
+    {
+      subscription: { type: mongoose.Schema.Types.ObjectId, refPath: 'type' },
+      repetitions: { type: Number, required: true, default: 1 }
+    }
+  ],
   type: { type: String, required: true, enum: ['Set', 'Exercise'] }
 })
 

@@ -4,35 +4,14 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 const User = require('../models/user')
-// const UserSubscription = require('../models/userSubscription')
+const UserStat = require('../models/userStat')
+
+const nextLvlXP = require('../helpers/nextLvlXP')
+
 const avatarsDirectory = './assets/img/avatars'
 
 const controller = {
   login: function (req, res) {
-    // const { username, password } = req.body
-    // const user = await User.findOne({ email: username })
-
-    // const validPassword = await bcrypt.compare(password, user.password)
-
-    // if (!user || !validPassword) {
-    //   return res.status(401).json({
-    //     msg: 'Auth failed'
-    //   })
-    // }
-
-    // const token = jwt.sign(
-    //   {
-    //     userId: user._id,
-    //     isAdmin: user.isAdmin
-    //   },
-    //   process.env.SECRET,
-    //   { expiresIn: '1h' }
-    // )
-
-    // return res.status(200).json({
-    //   token,
-    //   expiresIn: 3600
-    // })
     let fetchedUser
     User.findOne({ email: req.body.username })
       .then(user => {
@@ -48,6 +27,7 @@ const controller = {
             msg: 'Auth failed'
           })
         }
+
         // Crear un nou token
         const token = jwt.sign(
           {
@@ -80,21 +60,25 @@ const controller = {
       })
       user.save()
         .then(result => {
-          console.log(result)
-          // const setSubscription = new UserSubscription({
-          //   user_id: result._id,
-          //   type: 'Set',
-          //   subscriptions: []
+          const userStat = new UserStat({ user_id: result._id })
+          userStat.save()
+
+          // res.status(201).json({
+          //   msg: 'User created'
           // })
-          // const exerciseSubscription = new UserSubscription({
-          //   user_id: result._id,
-          //   type: 'Exercise',
-          //   subscriptions: []
-          // })
-          // setSubscription.save()
-          // exerciseSubscription.save()
-          res.status(201).json({
-            msg: 'User created'
+
+          // Crear un nou token
+          const token = jwt.sign(
+            {
+              userId: result._id,
+              isAdmin: result.isAdmin
+            },
+            process.env.SECRET,
+            { expiresIn: '1h' }
+          )
+          return res.status(200).json({
+            token,
+            expiresIn: 3600
           })
         })
         .catch(err => {
@@ -128,6 +112,16 @@ const controller = {
     User.findOne({ _id: req.userId })
       .then(user => {
         return res.status(200).json(user)
+      })
+  },
+
+  getUserStats: function (req, res) {
+    UserStat.findOne({ user_id: req.userId })
+      .then(userStats => {
+        userStats = JSON.parse(JSON.stringify(userStats))
+        const nextLvlXp = nextLvlXP(userStats.level)
+        userStats.nextLvlXp = nextLvlXp
+        return res.status(200).json(userStats)
       })
   }
 }

@@ -1,5 +1,5 @@
 require('dotenv').config()
-const fs = require('fs')
+// const fs = require('fs')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
@@ -8,7 +8,7 @@ const UserStat = require('../models/userStat')
 
 const nextLvlXP = require('../helpers/nextLvlXP')
 
-const avatarsDirectory = './assets/img/avatars'
+// const avatarsDirectory = './assets/img/avatars'
 
 const controller = {
   login: function (req, res) {
@@ -89,24 +89,24 @@ const controller = {
     })
   },
 
-  avatars: function (req, res) {
-    const avatarList = []
+  // avatars: function (req, res) {
+  //   const avatarList = []
 
-    fs.readdir(avatarsDirectory, (err, files) => {
-      if (err) return console.log(err)
+  //   fs.readdir(avatarsDirectory, (err, files) => {
+  //     if (err) return console.log(err)
 
-      files.forEach(file => {
-        avatarList.push({
-          name: 'Avatar ' + file.split('.')[0],
-          path: '/public/img/avatars/' + file
-        })
-      })
+  //     files.forEach(file => {
+  //       avatarList.push({
+  //         name: 'Avatar ' + file.split('.')[0],
+  //         path: '/public/img/avatars/' + file
+  //       })
+  //     })
 
-      avatarList.sort((a, b) => (a.name.replace('Avatar ', '')) - (b.name.replace('Avatar ', '')))
+  //     avatarList.sort((a, b) => (a.name.replace('Avatar ', '')) - (b.name.replace('Avatar ', '')))
 
-      return res.status(200).json(avatarList)
-    })
-  },
+  //     return res.status(200).json(avatarList)
+  //   })
+  // },
 
   getAuthUser: function (req, res) {
     User.findOne({ _id: req.userId })

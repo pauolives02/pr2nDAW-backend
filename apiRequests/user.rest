@@ -1,0 +1,6 @@
+GET http://localhost:3000/api/user/user-data
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDJmY2NhZmQ1ODMyMWM2ZGE3OTEzYzciLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNjgxMDI4Mjc1LCJleHAiOjE2ODEwMzE4NzV9.BFub-O56XjTvAPXMIkUfySg1WWHJ2gWDiNsUna30Z64
+
+###
+GET http://localhost:3000/api/user/user-stats
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDRiZDJhNTgxYTg5NGQ4ZDUwZGEzNWYiLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNjgyNjkzMTM4LCJleHAiOjE2ODI2OTY3Mzh9.PAVLrmNOxu8NcmQ3jRgBlJbVW-yY5PkU_QpcuESFQuM

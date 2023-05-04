@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const suggestionSchema = new mongoose.Schema({
-  subject: { type: String, required: true },
+  subject: { type: mongoose.Schema.Types.ObjectId, ref: 'suggestionSubject', required: true },
   description: { type: String, required: true },
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   date: { type: Date, default: Date.now }

@@ -8,7 +8,7 @@ const fs = require('fs')
 
 const controller = {
   all: (req, res, next) => {
-    Set.find({})
+    Set.find({}).populate('owner')
       .then(sets => {
         return res.status(200).json(sets)
       })

@@ -1,14 +1,18 @@
 [
   {
-    "name": "Other"
+    "name": "Other",
+    "default": true
   },
   {
-    "name": "Exercises"
+    "name": "Exercises",
+    "default": true
   },
   {
-    "name": "Sets"
+    "name": "Sets",
+    "default": true
   },
   {
-    "name": "Avatars"
+    "name": "Avatars",
+    "default": true
   }
 ]

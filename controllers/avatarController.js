@@ -6,7 +6,7 @@ const Avatar = require('../models/avatar')
 
 const controller = {
   getAll: function (req, res, next) {
-    Avatar.find({})
+    Avatar.find({ default: false })
       .then(avatars => {
         return res.status(200).json(avatars)
       })
@@ -17,7 +17,7 @@ const controller = {
     const file = req.params.avatar
     console.log(file)
     const filePath = './uploads/avatars/' + file
-    const defaultAvatar = './uploads/avatars/default.png'
+    const defaultAvatar = './uploads/avatars/default.svg'
 
     fs.access(filePath, (err) => {
       if (!err) {

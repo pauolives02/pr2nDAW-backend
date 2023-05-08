@@ -22,6 +22,16 @@ const controller = {
       })
   },
 
+  getSubjectsND: (req, res, next) => {
+    SuggestionSubject.find({ default: false })
+      .then(subjects => {
+        return res.status(200).json(subjects)
+      })
+      .catch(err => {
+        next(err)
+      })
+  },
+
   addSuggestion: (req, res, next) => {
     const suggestion = new Suggestion({
       subject: req.body.subject,

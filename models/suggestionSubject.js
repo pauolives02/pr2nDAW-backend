@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
 
 const suggestionSubjectSchema = new mongoose.Schema({
-  name: { type: String, required: true }
+  name: { type: String, required: true },
+  default: { type: Boolean, default: false }
 })
 
 suggestionSubjectSchema.set('toJSON', {

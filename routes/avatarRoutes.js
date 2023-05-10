@@ -1,6 +1,7 @@
 const express = require('express')
 const avatarController = require('../controllers/avatarController')
 const checkToken = require('../middlewares/checkToken')
+const checkIsAdmin = require('../middlewares/checkIsAdmin')
 
 const router = express.Router()
 
@@ -8,6 +9,6 @@ const router = express.Router()
 router.get('/all', checkToken, avatarController.getAll)
 router.get('/get-avatar/:avatar', avatarController.getAvatar)
 router.post('/add', checkToken, avatarController.uploadAvatar)
-router.delete('/delete', checkToken, avatarController.deleteAvatar)
+router.delete('/delete/:id', checkToken, checkIsAdmin, avatarController.deleteAvatar)
 
 module.exports = router

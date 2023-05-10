@@ -10,7 +10,7 @@ const nextLvlXP = require('../helpers/nextLvlXP')
 const controller = {
   login: function (req, res) {
     let fetchedUser
-    User.findOne({ email: req.body.username })
+    User.findOne({ $or: [{ email: req.body.username }, { username: req.body.username }] })
       .then(user => {
         if (!user) {
           return false

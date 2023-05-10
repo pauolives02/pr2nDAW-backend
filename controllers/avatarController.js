@@ -6,7 +6,7 @@ const Avatar = require('../models/avatar')
 
 const controller = {
   getAll: function (req, res, next) {
-    Avatar.find({ default: false })
+    Avatar.find({ default: false }).sort({ lvl: 1 })
       .then(avatars => {
         return res.status(200).json(avatars)
       })
@@ -33,7 +33,17 @@ const controller = {
   },
 
   deleteAvatar: function (req, res, next) {
-
+    const id = req.params.id
+    Avatar.findByIdAndRemove(id)
+      .then(item => {
+        if (item) {
+          item = { ...item, status: 'deleted' }
+          res.json(item)
+        } else {
+          res.status(404).json({ error: 'Not found' })
+        }
+      })
+      .catch(err => next(err))
   }
 }
 

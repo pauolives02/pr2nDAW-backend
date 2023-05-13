@@ -1,5 +1,4 @@
 require('dotenv').config()
-// const fs = require('fs')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
@@ -8,12 +7,10 @@ const UserStat = require('../models/userStat')
 
 const nextLvlXP = require('../helpers/nextLvlXP')
 
-// const avatarsDirectory = './assets/img/avatars'
-
 const controller = {
   login: function (req, res) {
     let fetchedUser
-    User.findOne({ email: req.body.username })
+    User.findOne({ $or: [{ email: req.body.username }, { username: req.body.username }] })
       .then(user => {
         if (!user) {
           return false
@@ -89,25 +86,6 @@ const controller = {
     })
   },
 
-  // avatars: function (req, res) {
-  //   const avatarList = []
-
-  //   fs.readdir(avatarsDirectory, (err, files) => {
-  //     if (err) return console.log(err)
-
-  //     files.forEach(file => {
-  //       avatarList.push({
-  //         name: 'Avatar ' + file.split('.')[0],
-  //         path: '/public/img/avatars/' + file
-  //       })
-  //     })
-
-  //     avatarList.sort((a, b) => (a.name.replace('Avatar ', '')) - (b.name.replace('Avatar ', '')))
-
-  //     return res.status(200).json(avatarList)
-  //   })
-  // },
-
   getAuthUser: function (req, res) {
     User.findOne({ _id: req.userId })
       .then(user => {
@@ -122,6 +100,16 @@ const controller = {
         const nextLvlXp = nextLvlXP(userStats.level)
         userStats.nextLvlXp = nextLvlXp
         return res.status(200).json(userStats)
+      })
+  },
+
+  getAllUsers: function (req, res, next) {
+    User.find({ isAdmin: false })
+      .then(users => {
+        return res.status(200).json(users)
+      })
+      .catch(err => {
+        next(err)
       })
   }
 }

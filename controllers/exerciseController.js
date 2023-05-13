@@ -8,7 +8,7 @@ const fs = require('fs')
 
 const controller = {
   all: (req, res, next) => {
-    Exercise.find({})
+    Exercise.find({}).populate('owner')
       .then(exercises => {
         return res.status(200).json(exercises)
       })

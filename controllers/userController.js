@@ -8,22 +8,17 @@ const UserStat = require('../models/userStat')
 const nextLvlXP = require('../helpers/nextLvlXP')
 
 const controller = {
-  login: function (req, res) {
+  login: (req, res, next) => {
     let fetchedUser
     User.findOne({ $or: [{ email: req.body.username }, { username: req.body.username }] })
       .then(user => {
-        if (!user) {
-          return false
-        }
+        if (!user) return false
+
         fetchedUser = user
         return bcrypt.compare(req.body.password, user.password)
       })
       .then(result => {
-        if (!result) {
-          return res.status(401).json({
-            msg: 'Auth failed'
-          })
-        }
+        if (!result) return res.status(401).json({ msg: 'Auth failed' })
 
         // Crear un nou token
         const token = jwt.sign(
@@ -34,20 +29,12 @@ const controller = {
           process.env.SECRET,
           { expiresIn: '1h' }
         )
-        return res.status(200).json({
-          token,
-          expiresIn: 3600
-        })
+        return res.status(200).json({ token, expiresIn: 3600 })
       })
-      .catch(err => {
-        console.error(err)
-        return res.status(401).json({
-          msg: 'Auth failed'
-        })
-      })
+      .catch(err => next(err))
   },
 
-  register: function (req, res) {
+  register: (req, res, next) => {
     bcrypt.hash(req.body.password, 10).then(hash => {
       const user = new User({
         email: req.body.email,
@@ -60,10 +47,6 @@ const controller = {
           const userStat = new UserStat({ user_id: result._id })
           userStat.save()
 
-          // res.status(201).json({
-          //   msg: 'User created'
-          // })
-
           // Crear un nou token
           const token = jwt.sign(
             {
@@ -73,27 +56,33 @@ const controller = {
             process.env.SECRET,
             { expiresIn: '1h' }
           )
-          return res.status(200).json({
-            token,
-            expiresIn: 3600
-          })
+          return res.status(200).json({ token, expiresIn: 3600 })
         })
         .catch(err => {
-          res.status(500).json({
-            msg: err
-          })
+          if (err.name === 'ValidationError') {
+            let msg = ''
+            if (err.errors.username) {
+              msg += err.errors.username.properties.message
+            }
+            if (err.errors.email) {
+              if (msg !== '') msg += ' || '
+              msg += err.errors.email.properties.message
+            }
+            return res.status(401).json({ msg })
+          }
+          next(err)
         })
     })
   },
 
-  getAuthUser: function (req, res) {
+  getAuthUser: (req, res) => {
     User.findOne({ _id: req.userId })
       .then(user => {
         return res.status(200).json(user)
       })
   },
 
-  getUserStats: function (req, res) {
+  getUserStats: (req, res, next) => {
     UserStat.findOne({ user_id: req.userId })
       .then(userStats => {
         userStats = JSON.parse(JSON.stringify(userStats))
@@ -101,16 +90,15 @@ const controller = {
         userStats.nextLvlXp = nextLvlXp
         return res.status(200).json(userStats)
       })
+      .catch(err => next(err))
   },
 
-  getAllUsers: function (req, res, next) {
+  getAllUsers: (req, res, next) => {
     User.find({ isAdmin: false })
       .then(users => {
         return res.status(200).json(users)
       })
-      .catch(err => {
-        next(err)
-      })
+      .catch(err => next(err))
   }
 }
 

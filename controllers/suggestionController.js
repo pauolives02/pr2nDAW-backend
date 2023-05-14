@@ -60,6 +60,18 @@ const controller = {
       .catch(err => next(err))
   },
 
+  changeStatus: (req, res, next) => {
+    Suggestion.findByIdAndUpdate(req.params.id, { status: req.body.status })
+      .then(result => {
+        if (result) {
+          res.status(200).json({ msg: 'Status changed successfully' })
+        } else {
+          res.status(404).json({ error: 'Not found' })
+        }
+      })
+      .catch(err => next(err))
+  },
+
   // Suggestions subjects
   getSubjects: (req, res, next) => {
     SuggestionSubject.find({})

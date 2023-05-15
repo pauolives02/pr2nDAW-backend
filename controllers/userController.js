@@ -75,6 +75,65 @@ const controller = {
     })
   },
 
+  updateUserData: (req, res, next) => {
+    if (typeof req.body.password === 'undefined' || (typeof req.body.username === 'undefined' && typeof req.body.email === 'undefined')) {
+      return res.status(401).json({ msg: 'Empty fields' })
+    }
+
+    User.findOne({ _id: req.userId })
+      .then(user => {
+        bcrypt.compare(req.body.password, user.password)
+          .then(result => {
+            if (!result) return res.status(401).json({ msg: 'Auth failed' })
+
+            const newData = {}
+            if (req.body.username) newData.username = req.body.username
+            if (req.body.email) newData.email = req.body.email
+
+            User.findByIdAndUpdate({ _id: req.userId }, newData)
+              .then(user => {
+                return res.status(200).json({ msg: 'User data updated updated successfully' })
+              })
+              .catch(err => next(err))
+          })
+      })
+  },
+
+  updateUserPassword: (req, res, next) => {
+    if (typeof req.body.password === 'undefined' || typeof req.body.oldPassword === 'undefined') {
+      return res.status(401).json({ msg: 'Empty fields' })
+    }
+
+    User.findOne({ _id: req.userId })
+      .then(user => {
+        bcrypt.compare(req.body.oldPassword, user.password)
+          .then(result => {
+            if (!result) return res.status(401).json({ msg: 'Auth failed' })
+
+            bcrypt.hash(req.body.password, 10).then(hash => {
+              User.findByIdAndUpdate({ _id: req.userId }, { password: hash })
+                .then(user => {
+                  return res.status(200).json({ msg: 'Password updated successfully' })
+                })
+                .catch(err => {
+                  if (err.name === 'ValidationError') {
+                    let msg = ''
+                    if (err.errors.username) {
+                      msg += err.errors.username.properties.message
+                    }
+                    if (err.errors.email) {
+                      if (msg !== '') msg += ' || '
+                      msg += err.errors.email.properties.message
+                    }
+                    return res.status(401).json({ msg })
+                  }
+                  next(err)
+                })
+            })
+          })
+      })
+  },
+
   getAuthUser: (req, res) => {
     User.findOne({ _id: req.userId })
       .then(user => {

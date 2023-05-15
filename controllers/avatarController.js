@@ -7,7 +7,9 @@ const Avatar = require('../models/avatar')
 
 const controller = {
   getAll: function (req, res, next) {
-    Avatar.find({ default: false }).sort({ lvl: 1 })
+    const query = { default: false }
+    if (req.query.lvl) query.lvl = req.query.lvl
+    Avatar.find(query).sort({ lvl: 1 })
       .then(avatars => {
         return res.status(200).json(avatars)
       })

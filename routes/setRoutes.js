@@ -12,6 +12,7 @@ router.get('/private', checkToken, setController.private)
 router.get('/subscriptions', checkToken, setController.subscriptions)
 router.get('/:id', checkToken, setController.getById)
 // router.post('/add', checkToken, setController.add)
+router.delete('/delete/:id', checkToken, setController.delete)
 router.get('/get-image/:image', setController.getImage)
 
 module.exports = router

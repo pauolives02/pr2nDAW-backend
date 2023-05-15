@@ -4,3 +4,24 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDJmY
 ###
 GET http://localhost:3000/api/user/user-stats
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDRiZDJhNTgxYTg5NGQ4ZDUwZGEzNWYiLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNjgyNjkzMTM4LCJleHAiOjE2ODI2OTY3Mzh9.PAVLrmNOxu8NcmQ3jRgBlJbVW-yY5PkU_QpcuESFQuM
+
+###
+PUT http://localhost:3000/api/user/update-password
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDRlNTdiZjA5ZjkwNGI3ZTZkNmQ4YzciLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE2ODQxNTA1OTAsImV4cCI6MTY4NDE1NDE5MH0.vQTaX0z9bi1jOV6hY7Q8qa2CGO85ED_CrvDhcV_ihB0
+Content-Type: application/json
+
+{
+  "oldPassword": "qwertyuiop",
+  "password": "qwertyui"
+}
+
+###
+PUT http://localhost:3000/api/user/update-data
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDRlNTdiZjA5ZjkwNGI3ZTZkNmQ4YzciLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE2ODQxNTA1OTAsImV4cCI6MTY4NDE1NDE5MH0.vQTaX0z9bi1jOV6hY7Q8qa2CGO85ED_CrvDhcV_ihB0
+Content-Type: application/json
+
+{
+  "password": "qwertyui",
+  "email": "pau@gmail.com",
+  "username": "Pau"
+}

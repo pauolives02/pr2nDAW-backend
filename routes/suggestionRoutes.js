@@ -11,6 +11,7 @@ router.get('/user-suggestions', checkToken, suggestionController.userSuggestions
 router.post('/add-suggestion', checkToken, suggestionController.addSuggestion)
 router.delete('/user-suggestions/delete/:id', checkToken, suggestionController.deleteUserSuggestion)
 router.delete('/delete/:id', checkToken, checkIsAdmin, suggestionController.deleteSuggestion)
+router.put('/change-status/:id', checkToken, checkIsAdmin, suggestionController.changeStatus)
 
 // Suggestion subjects
 router.get('/suggestion-subjects', checkToken, suggestionController.getSubjects)

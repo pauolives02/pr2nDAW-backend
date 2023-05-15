@@ -8,22 +8,17 @@ const UserStat = require('../models/userStat')
 const nextLvlXP = require('../helpers/nextLvlXP')
 
 const controller = {
-  login: function (req, res) {
+  login: (req, res, next) => {
     let fetchedUser
     User.findOne({ $or: [{ email: req.body.username }, { username: req.body.username }] })
       .then(user => {
-        if (!user) {
-          return false
-        }
+        if (!user) return false
+
         fetchedUser = user
         return bcrypt.compare(req.body.password, user.password)
       })
       .then(result => {
-        if (!result) {
-          return res.status(401).json({
-            msg: 'Auth failed'
-          })
-        }
+        if (!result) return res.status(401).json({ msg: 'Auth failed' })
 
         // Crear un nou token
         const token = jwt.sign(
@@ -34,20 +29,12 @@ const controller = {
           process.env.SECRET,
           { expiresIn: '1h' }
         )
-        return res.status(200).json({
-          token,
-          expiresIn: 3600
-        })
+        return res.status(200).json({ token, expiresIn: 3600 })
       })
-      .catch(err => {
-        console.error(err)
-        return res.status(401).json({
-          msg: 'Auth failed'
-        })
-      })
+      .catch(err => next(err))
   },
 
-  register: function (req, res) {
+  register: (req, res, next) => {
     bcrypt.hash(req.body.password, 10).then(hash => {
       const user = new User({
         email: req.body.email,
@@ -60,10 +47,6 @@ const controller = {
           const userStat = new UserStat({ user_id: result._id })
           userStat.save()
 
-          // res.status(201).json({
-          //   msg: 'User created'
-          // })
-
           // Crear un nou token
           const token = jwt.sign(
             {
@@ -73,27 +56,92 @@ const controller = {
             process.env.SECRET,
             { expiresIn: '1h' }
           )
-          return res.status(200).json({
-            token,
-            expiresIn: 3600
-          })
+          return res.status(200).json({ token, expiresIn: 3600 })
         })
         .catch(err => {
-          res.status(500).json({
-            msg: err
-          })
+          if (err.name === 'ValidationError') {
+            let msg = ''
+            if (err.errors.username) {
+              msg += err.errors.username.properties.message
+            }
+            if (err.errors.email) {
+              if (msg !== '') msg += ' || '
+              msg += err.errors.email.properties.message
+            }
+            return res.status(401).json({ msg })
+          }
+          next(err)
         })
     })
   },
 
-  getAuthUser: function (req, res) {
+  updateUserData: (req, res, next) => {
+    if (typeof req.body.password === 'undefined' || (typeof req.body.username === 'undefined' && typeof req.body.email === 'undefined')) {
+      return res.status(401).json({ msg: 'Empty fields' })
+    }
+
+    User.findOne({ _id: req.userId })
+      .then(user => {
+        bcrypt.compare(req.body.password, user.password)
+          .then(result => {
+            if (!result) return res.status(401).json({ msg: 'Auth failed' })
+
+            const newData = {}
+            if (req.body.username) newData.username = req.body.username
+            if (req.body.email) newData.email = req.body.email
+
+            User.findByIdAndUpdate({ _id: req.userId }, newData)
+              .then(user => {
+                return res.status(200).json({ msg: 'User data updated updated successfully' })
+              })
+              .catch(err => next(err))
+          })
+      })
+  },
+
+  updateUserPassword: (req, res, next) => {
+    if (typeof req.body.password === 'undefined' || typeof req.body.oldPassword === 'undefined') {
+      return res.status(401).json({ msg: 'Empty fields' })
+    }
+
+    User.findOne({ _id: req.userId })
+      .then(user => {
+        bcrypt.compare(req.body.oldPassword, user.password)
+          .then(result => {
+            if (!result) return res.status(401).json({ msg: 'Auth failed' })
+
+            bcrypt.hash(req.body.password, 10).then(hash => {
+              User.findByIdAndUpdate({ _id: req.userId }, { password: hash })
+                .then(user => {
+                  return res.status(200).json({ msg: 'Password updated successfully' })
+                })
+                .catch(err => {
+                  if (err.name === 'ValidationError') {
+                    let msg = ''
+                    if (err.errors.username) {
+                      msg += err.errors.username.properties.message
+                    }
+                    if (err.errors.email) {
+                      if (msg !== '') msg += ' || '
+                      msg += err.errors.email.properties.message
+                    }
+                    return res.status(401).json({ msg })
+                  }
+                  next(err)
+                })
+            })
+          })
+      })
+  },
+
+  getAuthUser: (req, res) => {
     User.findOne({ _id: req.userId })
       .then(user => {
         return res.status(200).json(user)
       })
   },
 
-  getUserStats: function (req, res) {
+  getUserStats: (req, res, next) => {
     UserStat.findOne({ user_id: req.userId })
       .then(userStats => {
         userStats = JSON.parse(JSON.stringify(userStats))
@@ -101,16 +149,24 @@ const controller = {
         userStats.nextLvlXp = nextLvlXp
         return res.status(200).json(userStats)
       })
+      .catch(err => next(err))
   },
 
-  getAllUsers: function (req, res, next) {
-    User.find({ isAdmin: false })
+  getAllUsers: (req, res, next) => {
+    const query = { isAdmin: false }
+    // filters
+    if (req.query.email) query.email = { $regex: '.*' + req.query.email + '.*', $options: 'i' }
+    if (req.query.username) query.username = { $regex: '.*' + req.query.username + '.*', $options: 'i' }
+    if (req.query.creationDate) {
+      const start = new Date(req.query.creationDate)
+      const end = new Date(req.query.creationDate).setHours(23, 59, 59, 999)
+      query.creationDate = { $gte: start, $lte: end }
+    }
+    User.find(query)
       .then(users => {
         return res.status(200).json(users)
       })
-      .catch(err => {
-        next(err)
-      })
+      .catch(err => next(err))
   }
 }
 

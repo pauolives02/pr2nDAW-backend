@@ -8,8 +8,22 @@ const fs = require('fs')
 
 const controller = {
   all: (req, res, next) => {
-    Set.find({}).populate('owner')
+    const query = {}
+    let populate = 'owner'
+    // filters
+    if (req.query.name) query.name = { $regex: '.*' + req.query.name + '.*', $options: 'i' }
+    if (req.query.description) query.description = { $regex: '.*' + req.query.description + '.*', $options: 'i' }
+    if (req.query.finished_xp) query.finished_xp = req.query.finished_xp
+    if (req.query.public) query.public = req.query.public
+    if (req.query.owner) {
+      populate = { path: 'owner', select: 'username', match: { username: { $regex: '.*' + req.query.owner + '.*', $options: 'i' } } }
+    }
+
+    Set.find({}).populate(populate)
       .then(sets => {
+        if (req.query.owner) {
+          sets = sets.filter(exercise => exercise.owner != null)
+        }
         return res.status(200).json(sets)
       })
       .catch(err => {
@@ -105,13 +119,25 @@ const controller = {
   //   }
   // },
 
-  // subscription: (req, res, next) => {
-
-  // },
+  delete: (req, res, next) => {
+    const query = { _id: req.params.id }
+    if (!req.isAdmin) query.owner = req.userId
+    Set.findOneAndRemove(query)
+      .then(set => {
+        if (set) {
+          fs.unlinkSync('./uploads/sets/' + set.image)
+          set = { ...set, msg: 'Set deleted successfully' }
+          res.json(set)
+        } else {
+          res.status(404).json({ error: 'Not found' })
+        }
+      })
+      .catch(err => next(err))
+  },
 
   getImage: (req, res, next) => {
     const file = req.params.image
-    const filePath = './uploads/exercises/' + file
+    const filePath = './uploads/sets/' + file
 
     fs.access(filePath, (err) => {
       if (!err) {

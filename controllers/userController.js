@@ -153,7 +153,16 @@ const controller = {
   },
 
   getAllUsers: (req, res, next) => {
-    User.find({ isAdmin: false })
+    const query = { isAdmin: false }
+    // filters
+    if (req.query.email) query.email = { $regex: '.*' + req.query.email + '.*', $options: 'i' }
+    if (req.query.username) query.username = { $regex: '.*' + req.query.username + '.*', $options: 'i' }
+    if (req.query.creationDate) {
+      const start = new Date(req.query.creationDate)
+      const end = new Date(req.query.creationDate).setHours(23, 59, 59, 999)
+      query.creationDate = { $gte: start, $lte: end }
+    }
+    User.find(query)
       .then(users => {
         return res.status(200).json(users)
       })

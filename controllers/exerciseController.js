@@ -8,8 +8,22 @@ const fs = require('fs')
 
 const controller = {
   all: (req, res, next) => {
-    Exercise.find({}).populate('owner')
+    const query = {}
+    let populate = 'owner'
+    // filters
+    if (req.query.name) query.name = { $regex: '.*' + req.query.name + '.*', $options: 'i' }
+    if (req.query.description) query.description = { $regex: '.*' + req.query.description + '.*', $options: 'i' }
+    if (req.query.finished_xp) query.finished_xp = req.query.finished_xp
+    if (req.query.public) query.public = req.query.public
+    if (req.query.owner) {
+      populate = { path: 'owner', select: 'username', match: { username: { $regex: '.*' + req.query.owner + '.*', $options: 'i' } } }
+    }
+
+    Exercise.find(query).populate(populate)
       .then(exercises => {
+        if (req.query.owner) {
+          exercises = exercises.filter(exercise => exercise.owner != null)
+        }
         return res.status(200).json(exercises)
       })
       .catch(err => next(err))
@@ -159,7 +173,6 @@ const controller = {
   delete: (req, res, next) => {
     const query = { _id: req.params.id }
     if (!req.isAdmin) query.owner = req.userId
-    console.log(query)
     Exercise.findOneAndRemove(query)
       .then(exercise => {
         if (exercise) {

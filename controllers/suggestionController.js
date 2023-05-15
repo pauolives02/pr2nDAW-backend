@@ -4,8 +4,32 @@ const SuggestionSubject = require('../models/suggestionSubject')
 const controller = {
   // Suggestions
   allSuggestions: (req, res, next) => {
-    Suggestion.find({}).populate('subject user_id').sort({ status: 1, date: -1 })
+    const query = {}
+    let populate = 'subject user_id'
+    // filters
+    if (req.query.description) query.description = { $regex: '.*' + req.query.description + '.*', $options: 'i' }
+    if (req.query.status) query.status = req.query.status
+    if (req.query.subject) query.subject = req.query.subject
+    if (req.query.date) {
+      const start = new Date(req.query.date)
+      const end = new Date(req.query.date).setHours(23, 59, 59, 999)
+      query.date = { $gte: start, $lte: end }
+    }
+    if (req.query.user_id) {
+      populate = [
+        {
+          path: 'subject',
+          model: 'suggestionSubject'
+        }
+      ]
+      populate.push({ path: 'user_id', select: 'username', match: { username: { $regex: '.*' + req.query.user_id + '.*', $options: 'i' } } })
+    }
+
+    Suggestion.find(query).populate(populate).sort({ status: 1, date: -1 })
       .then(suggestions => {
+        if (req.query.user_id) {
+          suggestions = suggestions.filter(exercise => exercise.user_id != null)
+        }
         return res.status(200).json(suggestions)
       })
       .catch(err => next(err))
@@ -82,7 +106,9 @@ const controller = {
   },
 
   getSubjectsND: (req, res, next) => {
-    SuggestionSubject.find({ default: false })
+    const query = { default: false }
+    if (req.query.name) query.name = { $regex: '.*' + req.query.name + '.*', $options: 'i' }
+    SuggestionSubject.find(query)
       .then(subjects => {
         return res.status(200).json(subjects)
       })

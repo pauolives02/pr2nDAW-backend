@@ -1,5 +1,6 @@
 const Exercise = require('../models/exercise')
 const UserSubscription = require('../models/userSubscription')
+const UserDailyGoal = require('../models/userDailyGoal')
 
 const { v4: uuidv4 } = require('uuid')
 const checkImageType = require('../helpers/checkImageType')
@@ -123,9 +124,22 @@ const controller = {
       subscription: id,
       repetitions
     }
-    UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $addToSet: { subscriptions: subscriptionData } }, { new: true, upsert: true })
-      .then(result => {
-        return res.status(200).json({ msg: 'Subscription added successfully' })
+    Exercise.findById(id)
+      .then(exercise => {
+        if (!exercise) return res.status(404).json({ msg: 'Exercise not found' })
+
+        UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $addToSet: { subscriptions: subscriptionData } }, { new: true, upsert: true })
+          .then(userSubscription => {
+            const date = new Date()
+            const startDay = date.setHours(0, 0, 0, 0)
+            const endDay = date.setHours(23, 59, 59, 999)
+            UserDailyGoal.findOneAndUpdate({ user_id: req.userId, subscription: exercise.id, date: { $gte: startDay, $lte: endDay } }, { repetitions, subscriptionType: userSubscription.type }, { new: true, upsert: true })
+              .then(result => {
+                return res.status(200).json({ msg: 'Subscription added successfully' })
+              })
+              .catch(err => next(err))
+          })
+          .catch(err => next(err))
       })
       .catch(err => next(err))
   },

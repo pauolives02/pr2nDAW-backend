@@ -31,20 +31,20 @@ const controller = {
 
         UserDailyGoal.find({ user_id: req.userId, subscription: { $in: subscriptionsIds }, date: { $gte: startDay, $lte: endDay } }).populate('subscription')
           .then(dailyGoals => {
-            console.log(dailyGoals)
             if (dailyGoals.length !== 0) {
               return res.status(200).json(dailyGoals)
             } else {
-              UserDailyGoal.insertMany(subs)
-                .then(dailyGoals => {
-                  return res.status(200).json(dailyGoals)
-                })
-                .catch(err => next(err))
+              controller.insertDailyGoal(req, res, next, subs)
             }
           })
           .catch(err => next(err))
       })
       .catch(err => next(err))
+  },
+
+  insertDailyGoal: (req, res, next, subscriptions) => {
+    UserDailyGoal.insertMany(subscriptions)
+      .then(() => controller.getDailyGoal(req, res, next))
   }
 }
 

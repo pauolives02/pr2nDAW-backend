@@ -1,5 +1,6 @@
 const Exercise = require('../models/exercise')
 const UserSubscription = require('../models/userSubscription')
+const UserDailyGoal = require('../models/userDailyGoal')
 
 const { v4: uuidv4 } = require('uuid')
 const checkImageType = require('../helpers/checkImageType')
@@ -7,6 +8,7 @@ const path = require('path')
 const fs = require('fs')
 
 const controller = {
+  // ALL EXERCISES
   all: (req, res, next) => {
     const query = {}
     let populate = 'owner'
@@ -29,6 +31,7 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // PUBLIC EXERCISES
   public: (req, res, next) => {
     Exercise.find({ public: true })
       .then(exercises => {
@@ -54,6 +57,7 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // PRIVATE EXERCISES
   private: (req, res, next) => {
     Exercise.find({ public: false, owner: req.userId })
       .then(exercises => {
@@ -79,6 +83,7 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // EXERCISES SUBSCRIPTIONS BY USER
   subscriptions: (req, res, next) => {
     const type = 'Exercise'
     UserSubscription.findOne({ user_id: req.userId, type, subscriptions: { $ne: [] } }).populate('subscriptions.subscription')
@@ -87,14 +92,31 @@ const controller = {
           return res.status(200).json([])
         }
         const exercises = JSON.parse(JSON.stringify(result.get('subscriptions')))
-        exercises.forEach((exercise, i) => {
-          exercise.subscription.isSubscribed = true
+        console.log(exercises)
+        exercises.forEach(exercise => {
+          if (exercise.subscription) {
+            exercise.subscription.isSubscribed = true
+          }
         })
         return res.status(200).json(exercises)
       })
       .catch(err => next(err))
   },
 
+  // AVAILABLE EXERCISES FOR SET CREATION
+  getExercisesForSet: (req, res, next) => {
+    let query = { public: false, owner: req.userId }
+
+    if (req.params.type === 'true') query = { public: true }
+
+    Exercise.find(query)
+      .then(exercises => {
+        return res.status(200).json(exercises)
+      })
+      .catch(err => next(err))
+  },
+
+  // ADD EXERCISE SUBSCRIPTION
   addSubscription: (req, res, next) => {
     const type = 'Exercise'
     const { id, repetitions } = req.body
@@ -102,23 +124,38 @@ const controller = {
       subscription: id,
       repetitions
     }
-    UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $addToSet: { subscriptions: subscriptionData } }, { new: true, upsert: true })
-      .then(result => {
-        return res.status(200).json(result)
+    Exercise.findById(id)
+      .then(exercise => {
+        if (!exercise) return res.status(404).json({ msg: 'Exercise not found' })
+
+        UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $addToSet: { subscriptions: subscriptionData } }, { new: true, upsert: true })
+          .then(userSubscription => {
+            const date = new Date()
+            const startDay = date.setHours(0, 0, 0, 0)
+            const endDay = date.setHours(23, 59, 59, 999)
+            UserDailyGoal.findOneAndUpdate({ user_id: req.userId, subscription: exercise.id, date: { $gte: startDay, $lte: endDay } }, { repetitions, subscriptionType: userSubscription.type }, { new: true, upsert: true })
+              .then(result => {
+                return res.status(200).json({ msg: 'Subscription added successfully' })
+              })
+              .catch(err => next(err))
+          })
+          .catch(err => next(err))
       })
       .catch(err => next(err))
   },
 
+  // REMOVE EXERCISE SUBSCRIPTION
   removeSubscription: (req, res, next) => {
     const type = 'Exercise'
     const { id } = req.body
     UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $pull: { subscriptions: { subscription: id } } }, { new: true })
       .then(result => {
-        return res.status(200).json(result)
+        return res.status(200).json({ msg: 'Subscription removed successfully' })
       })
       .catch(err => next(err))
   },
 
+  // GET EXERCISE BY ID
   getById: (req, res, next) => {
     const { id } = req.params
     Exercise.findById(id)
@@ -130,6 +167,7 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // ADD EXERCISE
   add: (req, res, next) => {
     if (typeof req.files.image === 'undefined' || typeof req.body.description === 'undefined' || typeof req.body.name === 'undefined') {
       return res.status(400).json({ msg: 'Empty fields' })
@@ -170,6 +208,7 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // DELETE EXERCISE
   delete: (req, res, next) => {
     const query = { _id: req.params.id }
     if (!req.isAdmin) query.owner = req.userId
@@ -177,8 +216,11 @@ const controller = {
       .then(exercise => {
         if (exercise) {
           fs.unlinkSync('./uploads/exercises/' + exercise.image)
-          exercise = { ...exercise, msg: 'Exercise deleted successfully' }
-          res.json(exercise)
+          UserSubscription.updateMany({ type: 'Exercise' }, { $pull: { subscriptions: { subscription: exercise.id } } })
+            .then(result => {
+              res.status(200).json({ msg: 'Exercise deleted successfully' })
+            })
+            .catch(err => next(err))
         } else {
           res.status(404).json({ error: 'Not found' })
         }
@@ -186,6 +228,7 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // UPDATE EXERCISE
   update: (req, res, next) => {
     // File verify and upload
     let file = null
@@ -227,7 +270,9 @@ const controller = {
     Exercise.findOneAndUpdate(query, newData)
       .then(exercise => {
         if (exercise) {
-          fs.unlinkSync('./uploads/exercises/' + exercise.image)
+          if (file && fs.existsSync('./uploads/exercises/' + exercise.image)) {
+            fs.unlinkSync('./uploads/exercises/' + exercise.image)
+          }
           res.status(200).json({ msg: 'Exercise updated successfully' })
         } else {
           fs.unlinkSync('./uploads/exercises/' + fileName)
@@ -240,15 +285,17 @@ const controller = {
       })
   },
 
+  // GET EXERCISE IMAGE
   getImage: (req, res, next) => {
     const file = req.params.image
     const filePath = './uploads/exercises/' + file
+    const defaultImage = './uploads/exercises/default.webp'
 
     fs.access(filePath, (err) => {
       if (!err) {
         return res.sendFile(path.resolve(filePath))
       } else {
-        return res.status(200).send({ msg: 'No image found' })
+        return res.sendFile(path.resolve(defaultImage))
       }
     })
   }

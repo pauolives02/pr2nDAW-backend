@@ -4,7 +4,13 @@ const setSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, required: true },
   image: { type: String, required: true },
-  exercises: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Exercise' }],
+  exercises: [
+    {
+      exercise: { type: mongoose.Schema.Types.ObjectId, ref: 'Exercise' },
+      repetitions: { type: Number, required: true }
+    }
+
+  ],
   public: { type: Boolean, required: true, default: false },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 })

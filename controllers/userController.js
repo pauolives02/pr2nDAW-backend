@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 
 const User = require('../models/user')
 const UserStat = require('../models/userStat')
+const Avatar = require('../models/avatar')
 
 const nextLvlXP = require('../helpers/nextLvlXP')
 
@@ -100,6 +101,7 @@ const controller = {
   },
 
   updateUserPassword: (req, res, next) => {
+    console.log(req.body)
     if (typeof req.body.password === 'undefined' || typeof req.body.oldPassword === 'undefined') {
       return res.status(401).json({ msg: 'Empty fields' })
     }
@@ -134,15 +136,44 @@ const controller = {
       })
   },
 
-  getAuthUser: (req, res) => {
+  updateUserAvatar: (req, res, next) => {
+    if (!req.body.avatarId) return res.status(400).json({ msg: 'Any avatar was selected' })
+
+    UserStat.findOne({ user_id: req.userId })
+      .then(userStats => {
+        Avatar.findById(req.body.avatarId)
+          .then(avatar => {
+            if (userStats.level < avatar.lvl) return res.status(400).json({ msg: "You don't have the required level to use this avatar" })
+            User.findByIdAndUpdate({ _id: req.userId }, { avatar: avatar.image })
+              .then(result => {
+                return res.status(200).json({ msg: 'Avatar changed successfully' })
+              })
+              .catch(err => next(err))
+          })
+          .catch(err => next(err))
+      })
+      .catch(err => next(err))
+  },
+
+  getAuthUser: (req, res, next) => {
     User.findOne({ _id: req.userId })
       .then(user => {
         return res.status(200).json(user)
       })
+      .catch(err => next(err))
+  },
+
+  getUserProfile: (req, res, next) => {
+    User.findOne({ _id: req.params.userid }).select({ username: 1, avatar: 1 })
+      .then(user => {
+        return res.status(200).json(user)
+      })
+      .catch(err => next(err))
   },
 
   getUserStats: (req, res, next) => {
-    UserStat.findOne({ user_id: req.userId })
+    const userId = req.params.userid !== 'undefined' ? req.params.userid : req.userId
+    UserStat.findOne({ user_id: userId })
       .then(userStats => {
         userStats = JSON.parse(JSON.stringify(userStats))
         const nextLvlXp = nextLvlXP(userStats.level)

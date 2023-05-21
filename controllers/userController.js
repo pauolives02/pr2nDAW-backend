@@ -101,7 +101,6 @@ const controller = {
   },
 
   updateUserPassword: (req, res, next) => {
-    console.log(req.body)
     if (typeof req.body.password === 'undefined' || typeof req.body.oldPassword === 'undefined') {
       return res.status(401).json({ msg: 'Empty fields' })
     }

@@ -1,6 +1,7 @@
 const Exercise = require('../models/exercise')
 const UserSubscription = require('../models/userSubscription')
 const UserDailyGoal = require('../models/userDailyGoal')
+const Set = require('../models/set')
 
 const { v4: uuidv4 } = require('uuid')
 const checkImageType = require('../helpers/checkImageType')
@@ -215,20 +216,24 @@ const controller = {
   delete: (req, res, next) => {
     const query = { _id: req.params.id }
     if (!req.isAdmin) query.owner = req.userId
-    Exercise.findOneAndRemove(query)
-      .then(exercise => {
-        if (exercise) {
-          fs.unlinkSync('./uploads/exercises/' + exercise.image)
-          UserSubscription.updateMany({ type: 'Exercise' }, { $pull: { subscriptions: { subscription: exercise.id } } })
-            .then(result => {
-              res.status(200).json({ msg: 'Exercise deleted successfully' })
-            })
-            .catch(err => next(err))
-        } else {
-          res.status(404).json({ error: 'Not found' })
-        }
+    Set.find({ 'exercises.exercise': req.params.id }).select('_id')
+      .then(sets => {
+        if (sets.length !== 0) return res.status(400).json({ msg: "This exercise pertains in a set and can't be deleted" })
+        Exercise.findOneAndRemove(query)
+          .then(exercise => {
+            if (exercise) {
+              fs.unlinkSync('./uploads/exercises/' + exercise.image)
+              UserSubscription.updateMany({ type: 'Exercise' }, { $pull: { subscriptions: { subscription: exercise.id } } })
+                .then(result => {
+                  res.status(200).json({ msg: 'Exercise deleted successfully' })
+                })
+                .catch(err => next(err))
+            } else {
+              res.status(404).json({ error: 'Not found' })
+            }
+          })
+          .catch(err => next(err))
       })
-      .catch(err => next(err))
   },
 
   // UPDATE EXERCISE

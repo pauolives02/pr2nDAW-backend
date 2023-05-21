@@ -163,6 +163,7 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // ADD SET
   add: (req, res, next) => {
     if (typeof req.files.image === 'undefined' || typeof req.body.description === 'undefined' || typeof req.body.name === 'undefined' || typeof req.body.public === 'undefined' || typeof req.body.exercises === 'undefined' || req.body.exercises.length < 2) {
       return res.status(400).json({ msg: 'Empty fields' })
@@ -186,7 +187,7 @@ const controller = {
         const setExercises = []
         formSetExercises.forEach(exercise => {
           setExercises.push({
-            id: exercise.id,
+            exercise: exercise.id,
             repetitions: exercise.repetitions
           })
         })
@@ -230,6 +231,64 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // UPDATE EXERCISE
+  update: (req, res, next) => {
+    // File verify and upload
+    let file = null
+    let fileExtension = ''
+    let fileName = ''
+    if (req.files && typeof req.files.image !== 'undefined') {
+      file = req.files.image
+      fileExtension = file.name.split('.').pop()
+
+      if (!checkImageType({ extension: fileExtension, mimeType: file.mimetype })) {
+        return res.status(400).json({ msg: 'Invalid image type' })
+      }
+
+      fileName = uuidv4() + '.' + fileExtension
+
+      file.mv('./uploads/exercises/' + fileName, function (err, success) {
+        if (err) return next(err)
+      })
+    }
+
+    // Update
+    const query = {
+      _id: req.params.id
+    }
+    if (!req.isAdmin) query.owner = req.userId
+
+    const newData = {
+      name: req.body.name,
+      description: req.body.description
+    }
+    if (fileName) {
+      newData.image = fileName
+    }
+    if (req.isAdmin) {
+      if (typeof req.body.public !== 'undefined') newData.public = req.body.public
+      if (typeof req.body.finished_xp !== 'undefined') newData.finished_xp = req.body.finished_xp
+    }
+
+    Set.findOneAndUpdate(query, newData)
+      .then(set => {
+        if (set) {
+          if (file && fs.existsSync('./uploads/sets/' + set.image)) {
+            fs.unlinkSync('./uploads/sets/' + set.image)
+          }
+          res.status(200).json({ msg: 'Set updated successfully' })
+        } else {
+          fs.unlinkSync('./uploads/sets/' + fileName)
+          res.status(404).json({ error: 'Not found' })
+        }
+      })
+      .catch(err => {
+        fs.unlinkSync('./uploads/sets/' + fileName)
+        next(err)
+      })
+  },
+
+  // REMOVE SET
   delete: (req, res, next) => {
     const query = { _id: req.params.id }
     if (!req.isAdmin) query.owner = req.userId
@@ -237,8 +296,11 @@ const controller = {
       .then(set => {
         if (set) {
           fs.unlinkSync('./uploads/sets/' + set.image)
-          set = { ...set, msg: 'Set deleted successfully' }
-          res.json(set)
+          UserSubscription.updateMany({ type: 'Set' }, { $pull: { subscriptions: { subscription: set.id } } })
+            .then(result => {
+              res.status(200).json({ msg: 'Set deleted successfully' })
+            })
+            .catch(err => next(err))
         } else {
           res.status(404).json({ error: 'Not found' })
         }
@@ -246,6 +308,7 @@ const controller = {
       .catch(err => next(err))
   },
 
+  // GET SET IMAGE
   getImage: (req, res, next) => {
     const file = req.params.image
     const filePath = './uploads/sets/' + file

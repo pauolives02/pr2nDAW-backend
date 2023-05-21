@@ -1,12 +1,15 @@
 const Set = require('../models/set')
+const Exercise = require('../models/exercise')
 const UserSubscription = require('../models/userSubscription')
+const UserDailyGoal = require('../models/userDailyGoal')
 
-// const { v4: uuidv4 } = require('uuid')
-// const checkImageType = require('../helpers/checkImageType')
+const { v4: uuidv4 } = require('uuid')
+const checkImageType = require('../helpers/checkImageType')
 const path = require('path')
 const fs = require('fs')
 
 const controller = {
+  // ALL SETS
   all: (req, res, next) => {
     const query = {}
     let populate = 'owner'
@@ -19,7 +22,7 @@ const controller = {
       populate = { path: 'owner', select: 'username', match: { username: { $regex: '.*' + req.query.owner + '.*', $options: 'i' } } }
     }
 
-    Set.find({}).populate(populate)
+    Set.find(query).populate(populate)
       .then(sets => {
         if (req.query.owner) {
           sets = sets.filter(exercise => exercise.owner != null)
@@ -31,34 +34,77 @@ const controller = {
       })
   },
 
+  // PUBLIC SETS
   public: (req, res, next) => {
     Set.find({ public: true })
       .then(sets => {
-        return res.status(200).json(sets)
+        UserSubscription.findOne({ user_id: req.userId, type: 'Set' })
+          .then(result => {
+            if (!result || result.subscriptions.length === 0) {
+              return res.status(200).json(sets)
+            }
+            sets = JSON.parse(JSON.stringify(sets))
+            const subscriptions = JSON.parse(JSON.stringify(result.get('subscriptions')))
+            sets.forEach(set => {
+              set.isSubscribed = false
+              subscriptions.forEach(sub => {
+                if (set.id === sub.subscription) {
+                  set.isSubscribed = true
+                }
+              })
+            })
+
+            return res.status(200).json(sets)
+          })
       })
       .catch(err => {
         next(err)
       })
   },
 
+  // PRIVATE SETS
   private: (req, res, next) => {
     Set.find({ public: false, owner: req.userId })
       .then(sets => {
-        return res.status(200).json(sets)
+        UserSubscription.findOne({ user_id: req.userId, type: 'Set' })
+          .then(result => {
+            if (!result || result.subscriptions.length === 0) {
+              return res.status(200).json(sets)
+            }
+
+            sets = JSON.parse(JSON.stringify(sets))
+            const subscriptions = JSON.parse(JSON.stringify(result.get('subscriptions')))
+            sets.forEach(set => {
+              set.isSubscribed = false
+              subscriptions.forEach(sub => {
+                if (set.id === sub.subscription) {
+                  set.isSubscribed = true
+                }
+              })
+            })
+
+            return res.status(200).json(sets)
+          })
       })
       .catch(err => {
         next(err)
       })
   },
 
+  // SETS SUBSCRIPTIONS BY USER
   subscriptions: (req, res, next) => {
     const type = 'Set'
-    UserSubscription.findOne({ user_id: req.userId, type, subscriptions: { $ne: [] } }).populate('subscriptions')
+    UserSubscription.findOne({ user_id: req.userId, type, subscriptions: { $ne: [] } }).populate('subscriptions.subscription')
       .then(result => {
-        if (!result) {
-          return res.status(200).json([])
-        }
-        return res.status(200).json(result)
+        if (!result) return res.status(200).json([])
+
+        const sets = JSON.parse(JSON.stringify(result.get('subscriptions')))
+        sets.forEach(set => {
+          if (set.subscription) {
+            set.subscription.isSubscribed = true
+          }
+        })
+        return res.status(200).json(sets)
       })
       .catch(err => {
         next(err)
@@ -78,46 +124,111 @@ const controller = {
       })
   },
 
-  // add: (req, res, next) => {
-  //   const file = req.files.image
-  //   const fileExtension = file.name.split('.').pop()
+  // ADD SET SUBSCRIPTION
+  addSubscription: (req, res, next) => {
+    const type = 'Set'
+    const { id, repetitions } = req.body
+    const subscriptionData = {
+      subscription: id,
+      repetitions
+    }
+    Set.findById(id)
+      .then(set => {
+        if (!set) return res.status(404).json({ msg: 'Set not found' })
 
-  //   if (checkImageType({ extension: fileExtension, mimeType: file.mimetype })) {
-  //     const fileName = uuidv4() + '.' + fileExtension
+        UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $addToSet: { subscriptions: subscriptionData } }, { new: true, upsert: true })
+          .then(userSubscription => {
+            const date = new Date()
+            const startDay = date.setHours(0, 0, 0, 0)
+            const endDay = date.setHours(23, 59, 59, 999)
+            UserDailyGoal.findOneAndUpdate({ user_id: req.userId, subscription: set.id, date: { $gte: startDay, $lte: endDay } }, { repetitions, subscriptionType: userSubscription.type }, { new: true, upsert: true })
+              .then(result => {
+                return res.status(200).json({ msg: 'Subscription added successfully' })
+              })
+              .catch(err => next(err))
+          })
+          .catch(err => next(err))
+      })
+      .catch(err => next(err))
+  },
 
-  //     file.mv('./uploads/exercises/' + fileName, function (err, success) {
-  //       if (err) return next(err)
+  // REMOVE EXERCISE SUBSCRIPTION
+  removeSubscription: (req, res, next) => {
+    const type = 'Set'
+    const { id } = req.body
+    UserSubscription.findOneAndUpdate({ user_id: req.userId, type }, { $pull: { subscriptions: { subscription: id } } }, { new: true })
+      .then(result => {
+        return res.status(200).json({ msg: 'Subscription removed successfully' })
+      })
+      .catch(err => next(err))
+  },
 
-  //       let isPublic = false
-  //       let xp = 1
+  add: (req, res, next) => {
+    if (typeof req.files.image === 'undefined' || typeof req.body.description === 'undefined' || typeof req.body.name === 'undefined' || typeof req.body.public === 'undefined' || typeof req.body.exercises === 'undefined' || req.body.exercises.length < 2) {
+      return res.status(400).json({ msg: 'Empty fields' })
+    }
 
-  //       if (req.isAdmin) {
-  //         isPublic = req.body.public
-  //         xp = req.body.finished_xp
-  //       }
+    // Available exercises for set and filter
+    let query = { $or: [{ public: true }, { $and: [{ public: false }, { owner: req.userId }] }] }
+    if (req.body.public) query = { public: true }
 
-  //       const newExercise = new Exercise({
-  //         name: req.body.name,
-  //         description: req.body.description,
-  //         image: fileName,
-  //         finished_xp: xp,
-  //         public: isPublic,
-  //         owner: req.userId
-  //       })
+    Exercise.find(query)
+      .then(exercises => {
+        exercises = JSON.parse(JSON.stringify(exercises))
+        const validExercises = []
+        exercises.forEach(exercise => {
+          validExercises.push(exercise.id)
+        })
 
-  //       newExercise.save()
-  //         .then(result => {
-  //           res.status(201).json({
-  //             msg: 'Exercise created',
-  //             exercise: result
-  //           })
-  //         })
-  //         .catch(err => {
-  //           next(err)
-  //         })
-  //     })
-  //   }
-  // },
+        const formSetExercises = JSON.parse(req.body.exercises)
+        formSetExercises.filter(exercise => !validExercises.includes(exercise.id) || exercise.repetitions < 1)
+
+        const setExercises = []
+        formSetExercises.forEach(exercise => {
+          setExercises.push({
+            id: exercise.id,
+            repetitions: exercise.repetitions
+          })
+        })
+
+        // Image verify and upload
+        const file = req.files.image
+        const fileExtension = file.name.split('.').pop()
+
+        if (!checkImageType({ extension: fileExtension, mimeType: file.mimetype })) {
+          return res.status(400).json({ msg: 'Invalid image type' })
+        }
+
+        const fileName = uuidv4() + '.' + fileExtension
+
+        file.mv('./uploads/sets/' + fileName, function (err, success) {
+          if (err) return next(err)
+        })
+
+        const newSet = new Set({
+          name: req.body.name,
+          description: req.body.description,
+          image: fileName,
+          owner: req.userId,
+          exercises: setExercises
+        })
+
+        if (req.isAdmin) {
+          if (typeof req.body.public !== 'undefined') newSet.public = req.body.public
+          if (typeof req.body.finished_xp !== 'undefined') newSet.finished_xp = req.body.finished_xp
+        }
+
+        newSet.save()
+          .then(result => {
+            res.status(201).json({
+              msg: 'Set created successfully',
+              set: result
+            })
+          })
+          .catch(err => next(err))
+      })
+      .catch(err => next(err))
+  },
 
   delete: (req, res, next) => {
     const query = { _id: req.params.id }
@@ -138,12 +249,13 @@ const controller = {
   getImage: (req, res, next) => {
     const file = req.params.image
     const filePath = './uploads/sets/' + file
+    const defaultImage = './uploads/sets/default.webp'
 
     fs.access(filePath, (err) => {
       if (!err) {
         return res.sendFile(path.resolve(filePath))
       } else {
-        return res.status(200).send({ msg: 'No image found' })
+        return res.sendFile(path.resolve(defaultImage))
       }
     })
   }

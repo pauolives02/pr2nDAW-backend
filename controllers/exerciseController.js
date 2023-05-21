@@ -88,11 +88,9 @@ const controller = {
     const type = 'Exercise'
     UserSubscription.findOne({ user_id: req.userId, type, subscriptions: { $ne: [] } }).populate('subscriptions.subscription')
       .then(result => {
-        if (!result) {
-          return res.status(200).json([])
-        }
+        if (!result) return res.status(200).json([])
+
         const exercises = JSON.parse(JSON.stringify(result.get('subscriptions')))
-        console.log(exercises)
         exercises.forEach(exercise => {
           if (exercise.subscription) {
             exercise.subscription.isSubscribed = true
@@ -105,11 +103,16 @@ const controller = {
 
   // AVAILABLE EXERCISES FOR SET CREATION
   getExercisesForSet: (req, res, next) => {
-    let query = { public: false, owner: req.userId }
+    let query
+    if (req.params.type === 'true') {
+      query = { public: true }
+    } else if (req.params.type === 'false') {
+      query = { $or: [{ public: true }, { $and: [{ public: false }, { owner: req.userId }] }] }
+    } else {
+      return res.status(400).send({ msg: 'Invalid type' })
+    }
 
-    if (req.params.type === 'true') query = { public: true }
-
-    Exercise.find(query)
+    Exercise.find(query).populate('owner', 'username')
       .then(exercises => {
         return res.status(200).json(exercises)
       })

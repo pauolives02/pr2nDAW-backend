@@ -10,8 +10,8 @@ GET http://localhost:3000/api/exercise/private
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDJmY2NhZmQ1ODMyMWM2ZGE3OTEzYzciLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE2ODE1Nzc1MzUsImV4cCI6MTY4MTU4MTEzNX0.6IzF9DhP9mHQSvYEfd1Xicnz0m94h7ZkilFPwAAGjh0
 
 ###
-GET http://localhost:3000/api/exercise/for-set/true
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDRlNTdiZjA5ZjkwNGI3ZTZkNmQ4YzciLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE2ODQ0MTI4MDUsImV4cCI6MTY4NDQxNjQwNX0.c3aSl1_VIlu0T9FRBfiJS13ZmOR9w-JhArIjI7AzsfQ
+GET http://localhost:3000/api/exercise/for-set/false
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDRlNTdiZjA5ZjkwNGI3ZTZkNmQ4YzciLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE2ODQ2MjA0MjQsImV4cCI6MTY4NDYyNDAyNH0._TxzHk01t0abeEL1Fkp7g8lfx9kGV9FZOpO3AJ0X_yo
 
 ###
 GET http://localhost:3000/api/exercise/subscriptions

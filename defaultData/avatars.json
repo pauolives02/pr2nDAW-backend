@@ -6,122 +6,122 @@
   },
   {
     "image": "1.png",
-    "lvl": 0,
+    "lvl": 1,
     "default": false
   },
   {
     "image": "2.png",
-    "lvl": 0,
+    "lvl": 1,
     "default": false
   },
   {
     "image": "3.png",
-    "lvl": 0,
+    "lvl": 1,
     "default": false
   },
   {
     "image": "4.png",
-    "lvl": 0,
+    "lvl": 5,
     "default": false
   },
   {
     "image": "5.png",
-    "lvl": 0,
+    "lvl": 7,
     "default": false
   },
   {
     "image": "6.png",
-    "lvl": 0,
+    "lvl": 10,
     "default": false
   },
   {
     "image": "7.png",
-    "lvl": 0,
+    "lvl": 16,
     "default": false
   },
   {
     "image": "8.png",
-    "lvl": 0,
+    "lvl": 20,
     "default": false
   },
   {
     "image": "9.png",
-    "lvl": 0,
+    "lvl": 27,
     "default": false
   },
   {
     "image": "10.png",
-    "lvl": 0,
+    "lvl": 35,
     "default": false
   },
   {
     "image": "11.png",
-    "lvl": 0,
+    "lvl": 40,
     "default": false
   },
   {
     "image": "12.png",
-    "lvl": 0,
+    "lvl": 48,
     "default": false
   },
   {
     "image": "13.png",
-    "lvl": 0,
+    "lvl": 56,
     "default": false
   },
   {
     "image": "14.png",
-    "lvl": 0,
+    "lvl": 60,
     "default": false
   },
   {
     "image": "15.png",
-    "lvl": 0,
+    "lvl": 65,
     "default": false
   },
   {
     "image": "16.png",
-    "lvl": 0,
+    "lvl": 70,
     "default": false
   },
   {
     "image": "17.png",
-    "lvl": 0,
+    "lvl": 75,
     "default": false
   },
   {
     "image": "18.png",
-    "lvl": 0,
+    "lvl": 80,
     "default": false
   },
   {
     "image": "19.png",
-    "lvl": 0,
+    "lvl": 83,
     "default": false
   },
   {
     "image": "20.png",
-    "lvl": 0,
+    "lvl": 89,
     "default": false
   },
   {
     "image": "21.png",
-    "lvl": 0,
+    "lvl": 94,
     "default": false
   },
   {
     "image": "22.png",
-    "lvl": 0,
+    "lvl": 100,
     "default": false
   },
   {
     "image": "23.png",
-    "lvl": 0,
+    "lvl": 110,
     "default": false
   },
   {
     "image": "24.png",
-    "lvl": 0,
+    "lvl": 130,
     "default": false
   }
 ]

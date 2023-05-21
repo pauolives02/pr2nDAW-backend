@@ -6,9 +6,9 @@ const ERRORS = {
   DefaultError: res => res.status(500).send({ msg: 'An error has ocurred' })
 }
 module.exports = (err, req, res, next) => {
-  console.log(err.name)
-  console.log(err.message)
-  console.log(err)
+  // console.log(err.name)
+  // console.log(err.message)
+  // console.log(err)
 
   const handler = ERRORS[err.name] || ERRORS.DefaultError
   handler(res, err)
